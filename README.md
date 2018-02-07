@@ -11,8 +11,7 @@ At present the following dialects of markdown are supported:
 
 Wishlist: PEGDown (Github dialect), CommonMark
 
-All you need to use the library is any unicode version of FPC. To run the 
-tests, you also need FastMemoryManager and the Jedi Code Library
+All you need to use the library is any unicode version of FPC.
 
 ## Using the Library
 
