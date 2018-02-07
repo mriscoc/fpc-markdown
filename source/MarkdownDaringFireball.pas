@@ -1,23 +1,25 @@
 {
-  This code was translated from TxtMark (https://github.com/rjeschke/txtmark)
+Copyright (C) Miguel A. Risco-Castillo
 
-  Copyright (C) 2011-2015 René Jeschke <rene_jeschke@yahoo.de>
-  Copyright (C) 2015+ Grahame Grieve <grahameg@gmail.com> (pascal port)
+FPC-markdown is a fork of Grahame Grieve <grahameg@gmail.com>
+Delphi-markdown https://github.com/grahamegrieve/delphi-markdown
 
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 }
 
 Unit MarkdownDaringFireball;
+
+{$mode objfpc}{$H+}
 
 interface
 
@@ -1573,7 +1575,7 @@ begin
     for i := 1 to out_.length - 1 do
     begin
       c := out_[i]; // zero based
-      if (not c.isLetterOrDigit()) then
+      if (not isLetterOrDigit(c)) then
         exit(-1);
     end;
     out_.append(';');
@@ -1782,7 +1784,7 @@ end;
 
 class function TEmitter.whitespaceToSpace(c: char): char;
 begin
-  if c.isWhitespace() then
+  if isWhitespace(c) then
     result := ' '
   else
     result := c;
@@ -1835,7 +1837,7 @@ begin
       end
       else if (FuseExtensions) then
       begin
-        if (c0.isLetterOrDigit()) and (c0 <> '_') and (c1.isLetterOrDigit()) then
+        if (isLetterOrDigit(c0)) and (c0 <> '_') and (isLetterOrDigit(c1)) then
           exit(mtNONE)
         else
           exit(mtEM_UNDERSCORE);
@@ -1906,9 +1908,9 @@ begin
           end;
         '"':
           begin
-            if (not c0.isLetterOrDigit()) and (c1 <> ' ') then
+            if (not isLetterOrDigit(c0)) and (c1 <> ' ') then
               exit(mtX_LDQUO);
-            if (c0 <> ' ') and (not c1.isLetterOrDigit()) then
+            if (c0 <> ' ') and (not isLetterOrDigit(c1)) then
               exit(mtX_RDQUO);
             exit(mtNONE);
           end;
@@ -2411,7 +2413,7 @@ begin
   position := 1;
   if (bin[1] = '/') then
     inc(position);
-  while (bin[position].isLetterOrDigit()) do
+  while (isLetterOrDigit(bin[position])) do
   begin
     out_.append(bin[position]);
     inc(position)
@@ -2425,7 +2427,7 @@ begin
   position := 1;
   if (s[1 + 1] = '/') then
     inc(position);
-  while (s[1 + position].isLetterOrDigit()) do
+  while (isLetterOrDigit(s[1 + position])) do
   begin
     out_.append(s[1 + position]);
     inc(position)
@@ -2533,7 +2535,7 @@ begin
   for i := 0 to Length(fenceLine) - 1 do
   begin
     c := fenceLine[1 + i];
-    if (not c.isWhitespace()) and (c <> '`') and (c <> '~') then
+    if (not isWhitespace(c)) and (c <> '`') and (c <> '~') then
 //      exit(fenceLine.substring(i).trim()); PSTfix
       Exit(  Trim( Copy(fenceLine, i+1)));
   end;
@@ -2608,18 +2610,18 @@ end;
 function TLine.readUntil(chend: TSysCharSet): String;
 var
   sb: TStringBuilder;
-  position: integer;
+  p: integer;
   ch, c: char;
 begin
   sb := TStringBuilder.Create();
   try
-    position := self.position;
-    while (position < Length(value)) do
+    p := self.position;
+    while (p < Length(value)) do
     begin
-      ch := value[1 + position];
-      if (ch = '\') and (position + 1 < Length(value)) then
+      ch := value[1 + p];
+      if (ch = '\') and (p + 1 < Length(value)) then
       begin
-        c := value[1 + position + 1];
+        c := value[1 + p + 1];
         if CharInSet(c, ['\', '[', ']', '(', ')', '{', '}', '#', '"', '''', '.', '>', '*', '+', '-', '_', '!', '`', '~']) then
         begin
           sb.append(c);
@@ -2635,16 +2637,16 @@ begin
         break
       else
         sb.append(ch);
-      inc(position);
+      inc(p);
     end;
 
-    if (position < Length(value)) then
-      ch := value[1 + position]
+    if (p < Length(value)) then
+      ch := value[1 + p]
     else
       ch := #10;
     if CharInSet(ch, chend) then
     begin
-      self.position := position;
+      self.position := p;
       result := sb.ToString();
     end
     else
@@ -2748,10 +2750,10 @@ begin
       exit(ltULIST);
   end;
 
-  if (Length(value) - leading >= 3) and (value[1 + leading].isDigit()) then
+  if (Length(value) - leading >= 3) and (isDigit(value[1 + leading])) then
   begin
     i := leading + 1;
-    while (i < Length(value)) and (value[1 + i].isDigit()) do
+    while (i < Length(value)) and (isDigit(value[1 + i])) do
       inc(i);
     if (i + 1 < Length(value)) and (value[1 + i] = '.') and (value[1 + i + 1] = ' ') then
       exit(ltOLIST);
@@ -2777,34 +2779,34 @@ end;
 function TLine.readXMLComment(firstLine: TLine; start: integer): integer;
 var
   line: TLine;
-  position: integer;
+  p: integer;
 begin
   line := firstLine;
   if (start + 3 < Length(line.value)) then
   begin
     if (line.value[1 + 2] = '-') and (line.value[1 + 3] = '-') then
     begin
-      position := start + 4;
+      p := start + 4;
       while (line <> nil) do
       begin
-        while (position < Length(line.value)) and (line.value[1 + position] <> '-') do
-          inc(position);
-        if (position = Length(line.value)) then
+        while (p < Length(line.value)) and (line.value[1 + p] <> '-') do
+          inc(p);
+        if (p = Length(line.value)) then
         begin
           line := line.next;
-          position := 0;
+          p := 0;
         end
         else
         begin
-          if (position + 2 < Length(line.value)) then
+          if (p + 2 < Length(line.value)) then
           begin
-            if (line.value[1 + position + 1] = '-') and (line.value[1 + position + 2] = '>') then
+            if (line.value[1 + p + 1] = '-') and (line.value[1 + p + 2] = '>') then
             begin
               xmlEndLine := line;
-              exit(position + 3);
+              exit(p + 3);
             end;
           end;
-          inc(position);
+          inc(p);
         end;
       end;
     end;
