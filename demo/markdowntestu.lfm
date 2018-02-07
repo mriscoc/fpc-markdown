@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 841
+  Left = 859
   Height = 298
-  Top = 538
+  Top = 610
   Width = 473
   Caption = 'MainForm'
   ClientHeight = 298
@@ -9,7 +9,7 @@ object MainForm: TMainForm
   LCLVersion = '1.8.0.6'
   object Memo1: TMemo
     Left = 0
-    Height = 245
+    Height = 248
     Top = 0
     Width = 473
     Align = alTop
@@ -17,6 +17,7 @@ object MainForm: TMainForm
     Lines.Strings = (
       'Paste here the Markdown text'
     )
+    ScrollBars = ssAutoBoth
     TabOrder = 0
   end
   object B_Convert: TButton
