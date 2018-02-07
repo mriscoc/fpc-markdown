@@ -4,7 +4,7 @@ Markdown Processor for FPC.
 
 ## Basic Information
 
-This is a Pascal (FPC) library that processes to markdown to HTML.
+This is a Pascal (FPC) library that processes markdown to HTML.
 At present the following dialects of markdown are supported:
 
 * The Daring Fireball dialect (see https://daringfireball.net/projects/markdown/) (translated from https://github.com/rjeschke/txtmark)

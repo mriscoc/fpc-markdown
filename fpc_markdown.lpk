@@ -46,23 +46,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."/>
     <Version Major="1" Release="1"/>
-    <Files Count="4">
+    <Files Count="2">
       <Item1>
         <Filename Value="source\MarkdownProcessor.pas"/>
         <UnitName Value="MarkdownProcessor"/>
       </Item1>
       <Item2>
-        <Filename Value="source\MarkdownCommonMark.pas"/>
-        <UnitName Value="MarkdownCommonMark"/>
-      </Item2>
-      <Item3>
         <Filename Value="source\MarkdownDaringFireball.pas"/>
         <UnitName Value="MarkdownDaringFireball"/>
-      </Item3>
-      <Item4>
-        <Filename Value="source\MarkdownAsciiDoc.pas"/>
-        <UnitName Value="MarkdownAsciiDoc"/>
-      </Item4>
+      </Item2>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

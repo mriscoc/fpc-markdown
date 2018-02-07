@@ -17,15 +17,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 }
 
-{
-Contribution Credits
---------------------
-
-- Pavel Stugel - revisions for support of older Delphi versions and FPC
-
-}
-
-
 Unit MarkdownProcessor;
 
 {$mode objfpc}{$H+}
@@ -53,8 +44,8 @@ Type
 implementation
 
 uses
-  MarkdownDaringFireball,
-  MarkdownCommonMark;
+  MarkdownDaringFireball;
+//  MarkdownCommonMark;
 
 { TMarkdownProcessor }
 
@@ -62,7 +53,7 @@ class function TMarkdownProcessor.CreateDialect(dialect: TMarkdownProcessorDiale
 begin
   case dialect of
     mdDaringFireball : result := TMarkdownDaringFireball.Create;
-    mdCommonMark : result := TMarkdownCommonMark.Create;
+//    mdCommonMark : result := TMarkdownCommonMark.Create;
   else
     raise Exception.Create('Unknown Markdown dialect');
   end;
