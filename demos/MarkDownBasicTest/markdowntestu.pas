@@ -37,7 +37,8 @@ var
 begin
   md := TMarkdownProcessor.createDialect(mdDaringFireball);
   md.UnSafe := true;
-  Memo1.Text:=md.process(Memo1.Text);;
+  Memo1.Text:=md.process(Memo1.Text);
+  md.free;
 end;
 
 end.
