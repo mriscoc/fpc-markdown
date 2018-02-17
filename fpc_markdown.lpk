@@ -15,18 +15,27 @@
       </SearchPaths>
       <Parsing>
         <SyntaxOptions>
+          <IncludeAssertionCode Value="True"/>
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
       <CodeGeneration>
+        <Checks>
+          <IOChecks Value="True"/>
+          <RangeChecks Value="True"/>
+          <OverflowChecks Value="True"/>
+          <StackChecks Value="True"/>
+        </Checks>
+        <VerifyObjMethodCallValidity Value="True"/>
         <Optimizations>
-          <OptimizationLevel Value="3"/>
           <VariablesInRegisters Value="True"/>
         </Optimizations>
       </CodeGeneration>
       <Linking>
         <Debugging>
-          <GenerateDebugInfo Value="False"/>
+          <UseHeaptrc Value="True"/>
+          <TrashVariables Value="True"/>
+          <UseExternalDbgSyms Value="True"/>
         </Debugging>
       </Linking>
     </CompilerOptions>
@@ -46,7 +55,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."/>
     <Version Major="1" Release="1"/>
-    <Files Count="2">
+    <Files Count="5">
       <Item1>
         <Filename Value="source\MarkdownProcessor.pas"/>
         <UnitName Value="MarkdownProcessor"/>
@@ -55,6 +64,19 @@ limitations under the License."/>
         <Filename Value="source\MarkdownDaringFireball.pas"/>
         <UnitName Value="MarkdownDaringFireball"/>
       </Item2>
+      <Item3>
+        <Filename Value="source\markdowntxtmark.pas"/>
+        <UnitName Value="markdowntxtmark"/>
+      </Item3>
+      <Item4>
+        <Filename Value="source\MarkdownUtils.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="MarkdownUtils"/>
+      </Item4>
+      <Item5>
+        <Filename Value="source\MarkdownCommonMark.pas"/>
+        <UnitName Value="MarkdownCommonMark"/>
+      </Item5>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

@@ -8,7 +8,8 @@ unit fpc_markdown;
 interface
 
 uses
-  MarkdownProcessor, MarkdownDaringFireball;
+  MarkdownProcessor, MarkdownDaringFireball, MarkdownTxtMark, 
+  MarkdownCommonMark;
 
 implementation
 

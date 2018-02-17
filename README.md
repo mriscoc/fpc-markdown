@@ -1,25 +1,34 @@
-# FPC-markdown
+FPC-markdown
+============
 
 Markdown Processor for FPC. 
 
-## Basic Information
+Basic Information
+-----------------
 
 This is a Pascal (FPC) library that processes markdown to HTML.
 At present the following dialects of markdown are supported:
 
-* The Daring Fireball dialect (see https://daringfireball.net/projects/markdown/) (translated from https://github.com/rjeschke/txtmark)
+* The Daring Fireball dialect
+ (see <https://daringfireball.net/projects/markdown/>)
 
-Wishlist: PEGDown (Github dialect), CommonMark
+* Enhanced TxtMark dialect
+ (translated from <https://github.com/rjeschke/txtmark>)
 
-All you need to use the library is any unicode version of FPC.
+Wishlist: PEGDown (Github dialect), CommonMark, etc.
+
+All you need to use the library is FPC version 3.0.4 or newer.
 
 ## Using the Library
 
-Create a TMarkdownProcessor (MarkdownProcessor.pas) of the dialect you want:
+
+Declare a variable of the class TMarkdownProcessor:
 
      var
        md : TMarkdownProcessor;
-  
+
+Create a TMarkdownProcessor (MarkdownProcessor.pas) of the dialect you want:
+
        md := TMarkdownProcessor.createDialect(mdDaringFireball)
   
 Decide whether you want to allow active content
@@ -32,20 +41,24 @@ Generate HTML fragments from Markdown content:
 
        html := md.process(markdown); 
   
-Note that the HTML returned is an HTML fragment, not a full HTML page.
+Note that the HTML returned is an HTML fragment, not a full HTML page.  
+  
+Do not forget to dispose the object after the use:
+
+       md.free
 
 ## License
 
 Copyright (C) Miguel A. Risco-Castillo
 
-FPC-markdown Implementation is a fork of Grahame Grieve <grahameg@gmail.com>
-Delphi-markdown (pascal port)
+FPC-markdown implementation is a fork of Grahame Grieve pascal port
+[Delphi-markdown](https://github.com/grahamegrieve/delphi-markdown)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+<http://www.apache.org/licenses/LICENSE-2.0>
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,

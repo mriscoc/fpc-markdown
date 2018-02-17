@@ -1,4 +1,4 @@
-program MarkDownTests;
+program MarkDownHtml;
 
 {$mode objfpc}{$H+}
 
@@ -7,8 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, MarkDownTestU
-  { you can add units after this };
+  Forms, MarkDownHtmlU;
 
 {$R *.res}
 
