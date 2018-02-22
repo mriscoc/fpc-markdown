@@ -46,11 +46,11 @@ implementation
 constructor TMarkdownCommonMark.Create;
 begin
   inherited;
+  Config.Dialect:=mdCommonMark;
 end;
 
 destructor TMarkdownCommonMark.Destroy;
 begin
-
   inherited;
 end;
 

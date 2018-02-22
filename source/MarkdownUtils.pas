@@ -26,7 +26,10 @@ interface
 uses
   SysUtils, StrUtils, Classes, Character, TypInfo, Math;
 
-type
+Type
+  TMarkdownDialect = (mdDaringFireball, mdTxtMark, mdCommonMark, mdAsciiDoc);
+  TSetMarkdownDialect = set of TMarkdownDialect;
+
   THTMLElement = (heNONE, hea, heabbr, heacronym, headdress, heapplet, hearea, heb, hebase, hebasefont, hebdo, hebig, heblockquote, hebody, hebr, hebutton, hecaption, hecite,
     hecode, hecol, hecolgroup, hedd, hedel, hedfn, hediv, hedl, hedt, heem, hefieldset, hefont, heform, heframe, heframeset, heh1, heh2, heh3, heh4, heh5, heh6, hehead, hehr,
     hehtml, hei, heiframe, heimg, heinput, heins, hekbd, helabel, helegend, heli, helink, hemap, hemeta, henoscript, heobject, heol, heoptgroup, heoption, hep, heparam, hepre, heq,
@@ -94,7 +97,6 @@ Type
     function GetChar(index: integer): char;
   public
     Constructor Create;
-
     procedure Clear;
     procedure Append(value : String); overload;
     procedure Append(value : integer); overload;
@@ -199,8 +201,20 @@ Type
     procedure openEmphasis(out_: TStringBuilder); virtual;
     procedure closeEmphasis(out_: TStringBuilder); virtual;
 
+    procedure openStrike(out_: TStringBuilder); virtual;
+    procedure closeStrike(out_: TStringBuilder); virtual;
+
+    procedure openIns(out_: TStringBuilder); virtual;
+    procedure closeIns(out_: TStringBuilder); virtual;
+
+    procedure openMark(out_: TStringBuilder); virtual;
+    procedure closeMark(out_: TStringBuilder); virtual;
+
     procedure openSuper(out_: TStringBuilder); virtual;
     procedure closeSuper(out_: TStringBuilder); virtual;
+
+    procedure openSub(out_: TStringBuilder); virtual;
+    procedure closeSub(out_: TStringBuilder); virtual;
 
     procedure openOrderedList(out_: TStringBuilder); virtual;
     procedure closeOrderedList(out_: TStringBuilder); virtual;
@@ -210,6 +224,9 @@ Type
 
     procedure openListItem(out_: TStringBuilder); virtual;
     procedure closeListItem(out_: TStringBuilder); virtual;
+
+    procedure checkedItem(out_: TStringBuilder); virtual;
+    procedure uncheckedItem(out_: TStringBuilder); virtual;
 
     procedure horizontalRuler(out_: TStringBuilder); virtual;
 
@@ -230,24 +247,27 @@ Type
     procedure emitBlock(out_: TStringBuilder; lines: TStringList; meta: String); virtual; abstract;
   end;
 
+  { TConfiguration }
+
   TConfiguration = class
   private
     Fdecorator: TDecorator;
+    FDialect: TMarkdownDialect;
     FsafeMode: boolean;
     FallowSpacesInFencedDelimiters: boolean;
-    FforceExtendedProfile: boolean;
     FcodeBlockEmitter: TBlockEmitter;
     FpanicMode: boolean;
     FspecialLinkEmitter: TSpanEmitter;
+    procedure SetDialect(AValue: TMarkdownDialect);
   public
     Constructor Create(safe : boolean);
     Destructor Destroy; override;
-
+    function isDialect(Dialects:TSetMarkdownDialect):boolean;
+    property Dialect:TMarkdownDialect read FDialect write SetDialect;
     property safeMode: boolean read FsafeMode write FsafeMode;
     property panicMode: boolean read FpanicMode write FpanicMode;
     property decorator: TDecorator read Fdecorator write Fdecorator;
     property codeBlockEmitter: TBlockEmitter read FcodeBlockEmitter write FcodeBlockEmitter;
-    property forceExtendedProfile: boolean read FforceExtendedProfile write FforceExtendedProfile;
     property allowSpacesInFencedDelimiters: boolean read FallowSpacesInFencedDelimiters write FallowSpacesInFencedDelimiters;
     property specialLinkEmitter: TSpanEmitter read FspecialLinkEmitter write FspecialLinkEmitter;
   end;
@@ -288,11 +308,9 @@ Type
     function countCharsStart(ch: char; allowSpaces: boolean): integer;
     function readXMLComment(firstLine: TLine; start: integer): integer;
     function checkHTML(): boolean;
-
   public
     Constructor Create;
     Destructor Destroy; Override;
-
     // Current cursor position.
     property position: integer read FPosition write FPosition;
     // Leading and trailing spaces.
@@ -305,20 +323,17 @@ Type
     // Previous and next line.
     property previous: TLine read FPrevious write FPrevious;
     property next: TLine read FNext write FNext;
-
     // Is previous/next line empty?
     property prevEmpty: boolean read FPrevEmpty write FPrevEmpty;
     property nextEmpty: boolean read FNextEmpty write FNextEmpty;
-
     // Final line of a XML block.
     property xmlEndLine: TLine read FXmlEndLine write FXmlEndLine;
-
     procedure Init;
     procedure InitLeading;
     function skipSpaces: boolean;
     function readUntil(chend: TSysCharSet): String;
     procedure setEmpty;
-    function getLineType(configuration: TConfiguration): TLineType;
+    function getLineType(config: TConfiguration): TLineType;
     function stripID: String;
 
   end;
@@ -330,7 +345,6 @@ Type
     FIsAbbrev: boolean;
   public
     Constructor Create(link, title: String; isAbbrev: boolean);
-
     property link: String read FLink write FLink;
     property title: String read FTitle write FTitle;
     property isAbbrev: boolean read FIsAbbrev write FIsAbbrev;
@@ -386,17 +400,13 @@ Type
     procedure removeLine(line: TLine);
     Constructor Create;
     Destructor Destroy; Override;
-
     // This block's type.
     property type_: TBlockType read FType write FType;
-
     property lines: TLine read FLines;
     property lineTail: TLine read FLineTail;
-
     // child blocks.
     property blocks: TBlock read FBlocks;
     property blockTail: TBlock read FBlockTail;
-
     // Next block.
     property next: TBlock read FNext write FNext;
     // Depth of headline BlockType.
@@ -405,7 +415,6 @@ Type
     property id: String read FId write FId;
     // Block meta information
     property meta: String read FMeta write FMeta;
-
   end;
 
   TMarkToken = (
@@ -415,10 +424,18 @@ Type
     mtEM_STAR, // x*x
     // _
     mtEM_UNDERSCORE, // x_x
+    // ~
+    mtSUB_TILDE, // x~x
     // &#x2a;&#x2a;
     mtSTRONG_STAR, // x**x
     // __
     mtSTRONG_UNDERSCORE, // x__x
+    // ~~
+    mtSTRIKE_TILDE, // x~~x
+    // ++
+    mtINS_PLUS, // x++x
+    // ==
+    mtMARK_EQ, // x==x
     // `
     mtCODE_SINGLE, // `
     // ``
@@ -462,17 +479,16 @@ Type
     );
 
   // Emitter class responsible for generating HTML output.
+
+  { TEmitter }
+
   TEmitter = class
   private
     linkRefs: TStringList;
     FConfig: TConfiguration;
-
   public
-    FuseExtensions: boolean;
-
     Constructor Create(config: TConfiguration);
     Destructor Destroy; override;
-
     procedure emitCodeLines(out_: TStringBuilder; lines: TLine; meta: String; removeIndent: boolean);
     procedure emitRawLines(out_: TStringBuilder; lines: TLine);
     procedure emitMarkedLines(out_: TStringBuilder; lines: TLine);
@@ -488,8 +504,6 @@ Type
     procedure emitLines(out_: TStringBuilder; block: TBlock);
   end;
 
-
-
 Function StringsContains(Const aNames: Array Of String; Const sName: String): boolean;
 function StringToEnum(ATypeInfo: PTypeInfo; const AStr: String; defValue: integer): integer;
 
@@ -500,7 +514,8 @@ var
   i: integer;
 Begin
   for i := 0 to length(aNames) - 1 do
-    if sName <> aNames[i] then
+//    if sName <> aNames[i] then
+    if sName = aNames[i] then
       exit(true);
   result := false;
 End;
@@ -548,6 +563,12 @@ end;
 
 { TConfiguration }
 
+procedure TConfiguration.SetDialect(AValue: TMarkdownDialect);
+begin
+  if FDialect=AValue then Exit;
+  FDialect:=AValue;
+end;
+
 constructor TConfiguration.Create(safe : boolean);
 begin
   inherited Create;
@@ -562,6 +583,16 @@ begin
   Fdecorator.Free;
   FspecialLinkEmitter.Free;
   inherited;
+end;
+
+function TConfiguration.isDialect(Dialects: TSetMarkdownDialect): boolean;
+var
+  i: TMarkdownDialect;
+Begin
+  for i in Dialects do
+    if Dialect = i then
+      exit(true);
+  result := false;
 end;
 
 { TDecorator }
@@ -645,6 +676,36 @@ begin
   out_.append('</em>');
 end;
 
+procedure TDecorator.openStrike(out_: TStringBuilder);
+begin
+  out_.append('<del>');
+end;
+
+procedure TDecorator.closeStrike(out_: TStringBuilder);
+begin
+  out_.append('</del>');
+end;
+
+procedure TDecorator.openIns(out_: TStringBuilder);
+begin
+  out_.append('<ins>');
+end;
+
+procedure TDecorator.closeIns(out_: TStringBuilder);
+begin
+  out_.append('</ins>');
+end;
+
+procedure TDecorator.openMark(out_: TStringBuilder);
+begin
+  out_.append('<mark>');
+end;
+
+procedure TDecorator.closeMark(out_: TStringBuilder);
+begin
+  out_.append('</mark>');
+end;
+
 procedure TDecorator.openSuper(out_: TStringBuilder);
 begin
   out_.append('<sup>');
@@ -653,6 +714,16 @@ end;
 procedure TDecorator.closeSuper(out_: TStringBuilder);
 begin
   out_.append('</sup>');
+end;
+
+procedure TDecorator.openSub(out_: TStringBuilder);
+begin
+  out_.append('<sub>');
+end;
+
+procedure TDecorator.closeSub(out_: TStringBuilder);
+begin
+  out_.append('</sub>');
 end;
 
 procedure TDecorator.openOrderedList(out_: TStringBuilder);
@@ -685,9 +756,19 @@ begin
   out_.append('</li>'#10);
 end;
 
+procedure TDecorator.checkedItem(out_: TStringBuilder);
+begin
+  out_.append('<input checked disabled type="checkbox">');
+end;
+
+procedure TDecorator.uncheckedItem(out_: TStringBuilder);
+begin
+  out_.append('<input unchecked disabled type="checkbox">');
+end;
+
 procedure TDecorator.horizontalRuler(out_: TStringBuilder);
 begin
-  out_.append('<hr/>'#10);
+  out_.append('<hr />'#10);
 end;
 
 procedure TDecorator.openLink(out_: TStringBuilder);
@@ -763,7 +844,7 @@ begin
     btHEADLINE:
       begin
         FConfig.decorator.openHeadline(out_, root.hlDepth);
-        if (FuseExtensions and (root.id <> '')) then
+        if (FConfig.Dialect=mdTxtMark) and (root.id <> '') then
         begin
           out_.append(' id="');
           TUtils.appendCode(out_, root.id, 0, Length(root.id));
@@ -788,7 +869,7 @@ begin
     btLIST_ITEM:
       begin
         FConfig.decorator.openListItem(out_);
-        if (FuseExtensions and (root.id <> '')) then
+        if (FConfig.Dialect=mdTxtMark) and (root.id <> '') then
         begin
           out_.append(' id="');
           TUtils.appendCode(out_, root.id, 0, Length(root.id));
@@ -976,8 +1057,6 @@ begin
     begin
       if (isAbbrev) and (comment <> '') then
       begin
-        if (not FuseExtensions) then
-          exit(-1);
         out_.append('<abbr title:="');
         TUtils.appendValue(out_, comment, 0, Length(comment));
         out_.append('">');
@@ -1034,7 +1113,8 @@ begin
     // Check for auto links
     temp.Clear;
     position := TUtils.readUntil(temp, s, start + 1, [':', ' ', '>', #10]);
-    if (position <> -1) and (s[1 + position] = ':') and (THTML.isLinkPrefix(temp.ToString())) then
+//    if (position <> -1) and (s[1 + position] = ':') and (THTML.isLinkPrefix(temp.ToString())) then
+    if (position <> -1) and (s[1 + position] = ':') then
     begin
       position := TUtils.readUntil(temp, s, position, ['>']);
       if (position <> -1) then
@@ -1189,6 +1269,48 @@ begin
             else
               out_.append(s[1 + position]);
           end;
+        mtSTRIKE_TILDE:
+        begin
+          temp.Clear;
+          b := recursiveEmitLine(temp, s, position + 2, mt);
+          if (b > 0) then
+          begin
+            FConfig.decorator.openStrike(out_);
+            out_.append(temp);
+            FConfig.decorator.closeStrike(out_);
+            position := b + 1;
+          end
+          else
+            out_.append(s[1 + position]);
+        end;
+        mtINS_PLUS:
+        begin
+          temp.Clear;
+          b := recursiveEmitLine(temp, s, position + 2, mt);
+          if (b > 0) then
+          begin
+            FConfig.decorator.openIns(out_);
+            out_.append(temp);
+            FConfig.decorator.closeIns(out_);
+            position := b + 1;
+          end
+          else
+            out_.append(s[1 + position]);
+        end;
+        mtMARK_EQ:
+        begin
+          temp.Clear;
+          b := recursiveEmitLine(temp, s, position + 2, mt);
+          if (b > 0) then
+          begin
+            FConfig.decorator.openMark(out_);
+            out_.append(temp);
+            FConfig.decorator.closeMark(out_);
+            position := b + 1;
+          end
+          else
+            out_.append(s[1 + position]);
+        end;
         mtSUPER:
           begin
             temp.Clear;
@@ -1198,6 +1320,20 @@ begin
               FConfig.decorator.openSuper(out_);
               out_.append(temp);
               FConfig.decorator.closeSuper(out_);
+              position := b;
+            end
+            else
+              out_.append(s[1 + position]);
+          end;
+        mtSUB_TILDE:
+          begin
+            temp.Clear;
+            b := recursiveEmitLine(temp, s, position + 1, mt);
+            if (b > 0) then
+            begin
+              FConfig.decorator.openSub(out_);
+              out_.append(temp);
+              FConfig.decorator.closeSub(out_);
               position := b;
             end
             else
@@ -1366,7 +1502,7 @@ begin
         if (c0 <> ' ') or (c2 <> ' ') then
           exit(mtSTRONG_STAR)
         else
-          exit(mtEM_STAR);
+          exit(mtNONE);
       end
       else if (c0 <> ' ') or (c1 <> ' ') then
         exit(mtEM_STAR)
@@ -1378,9 +1514,9 @@ begin
         if (c0 <> ' ') or (c2 <> ' ') then
           exit(mtSTRONG_UNDERSCORE)
         else
-          exit(mtEM_UNDERSCORE);
+          exit(mtNONE);
       end
-      else if (FuseExtensions) then
+      else if FConfig.isDialect([mdTxtMark,mdCommonMark]) then
       begin
         if (isLetterOrDigit(c0)) and (c0 <> '_') and (isLetterOrDigit(c1)) then
           exit(mtNONE)
@@ -1397,12 +1533,12 @@ begin
       else
         exit(mtNONE);
     '[':
-      if (FuseExtensions) and (c1 = '[') then
+      if FConfig.isDialect([mdTxtMark,mdCommonMark]) and (c1 = '[') then
         exit(mtX_LINK_OPEN)
       else
         exit(mtLINK);
     ']':
-      if (FuseExtensions) and (c1 = ']') then
+      if FConfig.isDialect([mdTxtMark,mdCommonMark]) and (c1 = ']') then
         exit(mtX_LINK_CLOSE)
       else
         exit(mtNONE);
@@ -1417,49 +1553,68 @@ begin
       else
         exit(mtNONE);
     '<':
-      if (FuseExtensions) and (c1 = '<') then
+      if FConfig.isDialect([mdTxtMark,mdCommonMark]) and (c1 = '<') then
         exit(mtX_LAQUO)
       else
         exit(mtHTML);
     '&':
       exit(mtENTITY);
   else
-    if (FuseExtensions) then
-      case (c) of
-        '-':
-          if (c1 = '-') and (c2 = '-') then
-            exit(mtX_MDASH)
-          else if (c1 = '-') then
-            exit(mtX_NDASH);
-        '^':
-          if (c0 = '^') or (c1 = '^') then
-            exit(mtNONE)
-          else
-            exit(mtSUPER);
-        '>':
-          if (c1 = '>') then
-            exit(mtX_RAQUO);
-        '.':
-          if (c1 = '.') and (c2 = '.') then
-            exit(mtX_HELLIP);
-        '(':
-          begin
-            if (c1 = 'C') and (c2 = ')') then
-              exit(mtX_COPY);
-            if (c1 = 'R') and (c2 = ')') then
-              exit(mtX_REG);
-            if (c1 = 'T') and (c2 = 'M') and (c3 = ')') then
-              exit(mtX_TRADE);
-          end;
-        '"':
-          begin
-            if (not isLetterOrDigit(c0)) and (c1 <> ' ') then
-              exit(mtX_LDQUO);
-            if (c0 <> ' ') and (not isLetterOrDigit(c1)) then
-              exit(mtX_RDQUO);
-            exit(mtNONE);
-          end;
-      end;
+    if FConfig.isDialect([mdTxtMark,mdCommonMark]) then
+    case (c) of
+      '-':
+        if (c1 = '-') and (c2 = '-') then
+          exit(mtX_MDASH)
+        else if (c1 = '-') then
+          exit(mtX_NDASH);
+      '^':
+        if (c0 = '^') or (c1 = '^') then
+          exit(mtNONE)
+        else
+          exit(mtSUPER);
+      '>':
+        if (c1 = '>') then
+          exit(mtX_RAQUO);
+      '.':
+        if (c1 = '.') and (c2 = '.') then
+          exit(mtX_HELLIP);
+      '(':
+        begin
+          if (c1 = 'C') and (c2 = ')') then
+            exit(mtX_COPY);
+          if (c1 = 'R') and (c2 = ')') then
+            exit(mtX_REG);
+          if (c1 = 'T') and (c2 = 'M') and (c3 = ')') then
+            exit(mtX_TRADE);
+        end;
+      '"':
+        begin
+          if (not isLetterOrDigit(c0)) and (c1 <> ' ') then
+            exit(mtX_LDQUO);
+          if (c0 <> ' ') and (not isLetterOrDigit(c1)) then
+            exit(mtX_RDQUO);
+          exit(mtNONE);
+        end;
+    end;
+    if FConfig.isDialect([mdCommonMark]) then
+    case (c) of
+      '~':
+        if (c1 = '~') then
+        begin
+          if (c0 <> ' ') or (c2 <> ' ') then exit(mtSTRIKE_TILDE)
+        end else
+          if (c0 <> ' ') or (c1 <> ' ') then exit(mtSUB_TILDE);
+      '+':
+        if (c1 = '+') then
+        begin
+          if (c0 <> ' ') or (c2 <> ' ') then exit(mtINS_PLUS)
+        end;
+      '=':
+        if (c1 = '=') then
+        begin
+          if (c0 <> ' ') or (c2 <> ' ') then exit(mtMARK_EQ)
+        end;
+    end;
   end;
 end;
 
@@ -1478,7 +1633,7 @@ begin
 //        s.append(line.value.substring(line.leading, line.value.length - line.trailing)); PSTfix
         s.Append( Copy(line.value, line.leading + 1, Length(line.value) - line.trailing));
         if (line.trailing >= 2) then
-          s.append('<br />');
+          s.append('<br/>');
       end;
       if (line.next <> nil) then
         s.append(#10);
@@ -2257,7 +2412,7 @@ begin
   result := count;
 end;
 
-function TLine.getLineType(configuration: TConfiguration): TLineType;
+function TLine.getLineType(config: TConfiguration): TLineType;
 var
   i: integer;
 begin
@@ -2268,18 +2423,26 @@ begin
     exit(ltCODE);
 
   if (value[1 + leading] = '#') then
-    exit(ltHEADLINE);
+  begin
+    if config.isDialect([mdCommonMark]) then
+    begin
+      i:=1 + leading + 1;
+      while (i<Length(value)) and (value[i]='#') do inc(i);
+      if (i<=Length(value)) and (value[i]=' ') then exit(ltHEADLINE);
+    end
+    else exit(ltHEADLINE);
+  end;
 
   if (value[1 + leading] = '>') then
     exit(ltBQUOTE);
 
-  if (configuration.forceExtendedProfile) then
+  if config.isDialect([mdTxtMark,mdCommonMark]) then
   begin
     if (Length(value) - leading - trailing > 2) then
     begin
-      if (value[1 + leading] = '`') and (countCharsStart('`', configuration.allowSpacesInFencedDelimiters) >= 3) then
+      if (value[1 + leading] = '`') and (countCharsStart('`', config.allowSpacesInFencedDelimiters) >= 3) then
         exit(ltFENCED_CODE);
-      if (value[1 + leading] = '~') and (countCharsStart('~', configuration.allowSpacesInFencedDelimiters) >= 3) then
+      if (value[1 + leading] = '~') and (countCharsStart('~', config.allowSpacesInFencedDelimiters) >= 3) then
         exit(ltFENCED_CODE);
     end;
   end;
@@ -2360,7 +2523,7 @@ begin
   exit(-1);
 end;
 
-// FIXME ... hack
+// FIXME ... hack - It is OK NOW
 function TLine.stripID(): String;
 var
   p, start: integer;
@@ -2396,18 +2559,17 @@ begin
     else
       begin
         inc(p);
-        break;
       end;
     end;
   end;
 
   if (found) then
   begin
+    found := false;
     if (p + 1 < Length(value)) and (value[1 + p + 1] = '#') then
     begin
       start := p + 2;
       p := start;
-      found := false;
       while (p < Length(value)) and (not found) do
       begin
         case (value[1 + p]) of
@@ -2432,32 +2594,28 @@ begin
         else
           begin
             inc(p);
-            break;
           end;
-        end;
-
-        if (found) then
-        begin
-//          id := value.substring(start, p).trim(); PSTfix
-          id := Trim( Copy(value, start + 1, p));
-          if (leading <> 0) then
-          begin
-//            value := value.substring(0, leading) + value.substring(leading, start - 2).trim(); PSTfix
-            value := Copy(value, 1, leading) + Trim( Copy( value, leading + 1, start -2));
-          end
-          else
-          begin
-//            value := value.substring(leading, start - 2).trim();  PSTFix
-            value := Trim( Copy(value, leading +1, start -2));
-          end;
-          trailing := 0;
-          if (Length(id) > 0) then
-            exit(id)
-          else
-            exit('');
         end;
       end;
     end;
+   end;
+
+  if (found) then
+  begin
+    id := Trim( Copy(value, start + 1, p-start));
+    if (leading <> 0) then
+    begin
+      value := Copy(value, 1, leading) + Trim( Copy( value, leading + 1, start -2));
+    end
+    else
+    begin
+      value := Trim( Copy(value, leading +1, start -2));
+    end;
+    trailing := 0;
+    if (Length(id) > 0) then
+      exit(id)
+    else
+      exit('');
   end;
   exit('');
 end;
@@ -2714,7 +2872,6 @@ begin
     wasEmpty := true;
   end;
   result := wasEmpty;
-
 end;
 
 procedure TBlock.removeTrailingEmptyLines;
@@ -2837,12 +2994,12 @@ begin
     begin
       dec(end_);
     end;
+    if ((1 + end_)<Length(line.value)) and (line.value[1 + end_ + 1] <> ' ') then end_:=Length(line.value);
     line.value := Copy(line.value, start+1, end_-start+1);
     line.leading := 0;
     line.trailing := 0;
   end;
   self.hlDepth := Math.min(level, 6);
-
 end;
 
 {$IFDEF FPC}

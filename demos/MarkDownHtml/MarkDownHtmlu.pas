@@ -6,8 +6,8 @@ interface
 
 uses
   Classes, SysUtils, LazFileUtils, SynEdit, SynHighlighterHTML, Forms, Controls,
-  Graphics, Dialogs, StdCtrls, ExtCtrls, Clipbrd, MarkdownProcessor, LCLIntf,
-  ComCtrls, Buttons, StrUtils, HtmlView, HtmlGlobals, HTMLUn2;
+  Graphics, Dialogs, StdCtrls, ExtCtrls, Clipbrd, MarkdownProcessor, MarkdownUtils,
+  LCLIntf, ComCtrls, Buttons, StrUtils, HtmlView, HtmlGlobals, HTMLUn2;
 
 type
 
@@ -140,7 +140,7 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   i:integer;
 begin
-  md := TMarkdownProcessor.createDialect(mdTxtMark);
+  md := TMarkdownProcessor.createDialect(mdCommonMark);
   md.UnSafe := false;
   RootPath:=GetTempDir;
   I:=0;

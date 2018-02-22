@@ -24,21 +24,24 @@ Unit MarkdownProcessor;
 interface
 
 uses
-  SysUtils;
+  SysUtils, MarkdownUtils;
 
 Type
-  TMarkdownProcessorDialect = (mdDaringFireball, mdTxtMark, mdCommonMark, mdAsciiDoc);
+
+  { TMarkdownProcessor }
 
   TMarkdownProcessor = {abstract} class
+  private
+    FConfig: TConfiguration;
   protected
     function GetUnSafe: boolean; virtual; abstract;
     procedure SetUnSafe(const Value: boolean); virtual; abstract;
   public
-    class function CreateDialect(dialect : TMarkdownProcessorDialect) : TMarkdownProcessor;
-
+    class function CreateDialect(dialect : TMarkdownDialect) : TMarkdownProcessor;
+    function process(source : String) : String; virtual; abstract;
+    property config: TConfiguration read FConfig write FConfig;
     // when Unsafe = true, then the processor can create scripts etc.
     property UnSafe : boolean read GetUnSafe write SetUnSafe;
-    function process(source : String) : String; virtual; abstract;
   end;
 
 implementation
@@ -50,7 +53,7 @@ uses
 
 { TMarkdownProcessor }
 
-class function TMarkdownProcessor.CreateDialect(dialect: TMarkdownProcessorDialect): TMarkdownProcessor;
+class function TMarkdownProcessor.CreateDialect(dialect: TMarkdownDialect): TMarkdownProcessor;
 begin
   case dialect of
     mdDaringFireball : result := TMarkdownDaringFireball.Create;

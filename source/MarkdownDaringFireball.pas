@@ -27,18 +27,16 @@ uses
   SysUtils, Classes, TypInfo,
   MarkdownProcessor, MarkdownUtils;
 
-
 type
 
   TMarkdownDaringFireball = class(TMarkdownProcessor)
   private
-    FConfig: TConfiguration;
+//    Config: TConfiguration;
     Femitter: TEmitter;
     FuseExtensions: boolean;
     function readLines(reader : TReader): TBlock;
     procedure initListBlock(root: TBlock);
     procedure recurse(root: TBlock; listMode: boolean);
-
   protected
     function GetUnSafe: boolean; override;
     procedure SetUnSafe(const value: boolean); override;
@@ -46,8 +44,7 @@ type
     Constructor Create;
     Destructor Destroy; override;
     function process(source: String): String; override;
-    property config: TConfiguration read FConfig;
-
+//    property config: TConfiguration read Config;
   end;
 
 implementation
@@ -57,20 +54,20 @@ implementation
 constructor TMarkdownDaringFireball.Create;
 begin
   inherited Create;
-  FConfig := TConfiguration.Create(true);
+  Config := TConfiguration.Create(true);
   Femitter := TEmitter.Create(config);
 end;
 
 destructor TMarkdownDaringFireball.Destroy;
 begin
-  FConfig.Free;
+  Config.Free;
   Femitter.Free;
   inherited;
 end;
 
 function TMarkdownDaringFireball.GetUnSafe: boolean;
 begin
-  result := not FConfig.safeMode;
+  result := not Config.safeMode;
 end;
 
 procedure TMarkdownDaringFireball.initListBlock(root: TBlock);
@@ -82,7 +79,7 @@ begin
   line := line.next;
   while (line <> nil) do
   begin
-    t := line.getLineType(FConfig);
+    t := line.getLineType(Config);
     if ((t = ltOLIST) or (t = ltULIST) or (not line.isEmpty and (line.prevEmpty and (line.leading = 0) and not((t = ltOLIST) or (t = ltULIST))))) then
       root.split(line.previous).type_ := btLIST_ITEM;
     line := line.next;
@@ -96,8 +93,7 @@ var
   parent, block: TBlock;
   rdr : TReader;
 begin
-  FuseExtensions := config.forceExtendedProfile;
-  Femitter.FuseExtensions:=config.forceExtendedProfile;
+  FuseExtensions := Config.isDialect([mdTxtMark,mdCommonMark]);
   rdr := TReader.Create(source);
   try
     out_ := TStringBuilder.Create;
@@ -175,7 +171,7 @@ begin
               c := reader.read();
             end;
         else
-          if (c <> '<') or (not FConfig.panicMode) then
+          if (c <> '<') or (not Config.panicMode) then
           begin
             inc(position);
             sb.append(c);
@@ -259,8 +255,7 @@ begin
             if LowerCase(link) = 'extended' then
             begin
               FuseExtensions:=true;
-              Config.forceExtendedProfile:=true;
-              Femitter.FuseExtensions := true;
+              Config.Dialect:=mdTxtMark;
             end;
             lastLinkRef := nil;
           end
@@ -324,8 +319,8 @@ begin
   line := root.lines;
   if (listMode) then
   begin
-    root.removeListIndent(FConfig);
-    if (FuseExtensions and (root.lines <> nil) and (root.lines.getLineType(FConfig) <> ltCODE)) then
+    root.removeListIndent(Config);
+    if (Config.isDialect([mdTxtMark]) and (root.lines <> nil) and (root.lines.getLineType(Config) <> ltCODE)) then
       root.id := root.lines.stripID();
   end;
 
@@ -336,14 +331,14 @@ begin
 
   while (line <> nil) do
   begin
-    type_ := line.getLineType(FConfig);
+    type_ := line.getLineType(Config);
     case type_ of
       ltOTHER:
         begin
           wasEmpty := line.prevEmpty;
           while (line <> nil) and (not line.isEmpty) do
           begin
-            t := line.getLineType(FConfig);
+            t := line.getLineType(Config);
             if (listMode or FuseExtensions) and (t in [ltOLIST, ltULIST]) then
               break;
             if (FuseExtensions and (t in [ltCODE, ltFENCED_CODE])) then
@@ -403,7 +398,7 @@ begin
         begin
           while (line <> nil) do
           begin
-            if (not line.isEmpty and (line.prevEmpty and (line.leading = 0) and (line.getLineType(FConfig) <> ltBQUOTE))) then
+            if (not line.isEmpty and (line.prevEmpty and (line.leading = 0) and (line.getLineType(Config) <> ltBQUOTE))) then
               break;
             line := line.next;
           end;
@@ -431,7 +426,7 @@ begin
           line := line.next;
           while (line <> nil) do
           begin
-            if (line.getLineType(FConfig) = ltFENCED_CODE) then
+            if (line.getLineType(Config) = ltFENCED_CODE) then
               break;
             // TODO ... is this really necessary? Maybe add a special flag?
             line := line.next;
@@ -446,7 +441,7 @@ begin
           block.type_ := btFENCED_CODE;
           block.meta := TUtils.getMetaFromFence(block.lines.value);
           block.lines.setEmpty();
-          if (block.lineTail.getLineType(FConfig) = ltFENCED_CODE) then
+          if (block.lineTail.getLineType(Config) = ltFENCED_CODE) then
             block.lineTail.setEmpty();
           block.removeSurroundingEmptyLines();
         end;
@@ -463,7 +458,7 @@ begin
               block.hlDepth := 1
             else
               block.hlDepth := 2;
-          if (FuseExtensions) then
+          if Config.isDialect([mdTxtMark]) then
             block.id := block.lines.stripID();
           block.transfromHeadline();
           root.removeLeadingEmptyLines();
@@ -473,7 +468,7 @@ begin
         begin
           while (line <> nil) do
           begin
-            t := line.getLineType(FConfig);
+            t := line.getLineType(Config);
             if (not line.isEmpty and (line.prevEmpty and (line.leading = 0) and (not(t = type_)))) then
               break;
             line := line.next;
@@ -508,7 +503,7 @@ end;
 
 procedure TMarkdownDaringFireball.SetUnSafe(const value: boolean);
 begin
-  FConfig.safeMode := not value;
+  Config.safeMode := not value;
 end;
 
 end.

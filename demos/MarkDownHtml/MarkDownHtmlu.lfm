@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 945
+  Left = 1041
   Height = 499
-  Top = 273
+  Top = 340
   Width = 790
   Caption = 'Test MarkDown Convertion'
   ClientHeight = 499
@@ -547,7 +547,7 @@ object MainForm: TMainForm
           'Basic Information'
           '-----------------'
           ''
-          'This is a Pascal (`FPC`) library that processes markdown to HTML.'
+          'This is a Pascal (FPC) library that processes markdown to HTML.'
           'At present the following dialects of markdown are supported:'
           ''
           '* The Daring Fireball dialect'
@@ -555,6 +555,9 @@ object MainForm: TMainForm
           ''
           '* Enhanced TxtMark dialect'
           ' (translated from <https://github.com/rjeschke/txtmark>)'
+          ''
+          '* Initial support for CommonMark dialect'
+          ' (translated from <http://commonmark.org/>)'
           ''
           'Wishlist: PEGDown (Github dialect), CommonMark, etc.'
           ''
@@ -576,7 +579,7 @@ object MainForm: TMainForm
           ''
           '       md.UnSafe := true;'
           '  '
-          'Note: you should only set this to true if you *need* to - active content can be a signficant safety/security issue.  '
+          'Note: you should only set this to true if you *need* to - active content can be a significant safety/security issue.  '
           ' '
           'Generate HTML fragments from Markdown content:'
           ''
@@ -584,7 +587,7 @@ object MainForm: TMainForm
           '  '
           'Note that the HTML returned is an HTML fragment, not a full HTML page.  '
           '  '
-          'Do not forget to dispose the object after the use:'
+          'Do not forget to dispose of the object after the use:'
           ''
           '       md.free'
           ''
@@ -629,6 +632,7 @@ object MainForm: TMainForm
         MouseLinkColor.Foreground = clBlue
         LineHighlightColor.Background = clCream
         LineHighlightColor.Foreground = clNone
+        TabWidth = 4
         inline SynLeftGutterPartList1: TSynGutterPartList
           object SynGutterMarks1: TSynGutterMarks
             Width = 24

@@ -15,12 +15,16 @@ At present the following dialects of markdown are supported:
 * Enhanced TxtMark dialect
  (translated from <https://github.com/rjeschke/txtmark>)
 
+* Initial support for CommonMark dialect
+ (translated from <http://commonmark.org/>)
+
 Wishlist: PEGDown (Github dialect), CommonMark, etc.
 
 All you need to use the library is FPC version 3.0.4 or newer.
 
-## Using the Library
 
+Using the Library
+-----------------
 
 Declare a variable of the class TMarkdownProcessor:
 
@@ -35,7 +39,7 @@ Decide whether you want to allow active content
 
        md.UnSafe := true;
   
-Note: you should only set this to true if you *need* to - active content can be a signficant safety/security issue.  
+Note: you should only set this to true if you *need* to - active content can be a significant safety/security issue.  
  
 Generate HTML fragments from Markdown content:
 
@@ -43,12 +47,17 @@ Generate HTML fragments from Markdown content:
   
 Note that the HTML returned is an HTML fragment, not a full HTML page.  
   
-Do not forget to dispose the object after the use:
+Do not forget to dispose of the object after the use:
 
        md.free
 
-## License
+Examples
+--------
+The demo folder contains two demonstrative [Lazarus](http://www.lazarus-ide.org/) programs,
+the most advanced, `MarkdownHTML`, needs the [HTMLViewer](https://github.com/BerndGabriel/HtmlViewer) control.
 
+License
+-------
 Copyright (C) Miguel A. Risco-Castillo
 
 FPC-markdown implementation is a fork of Grahame Grieve pascal port

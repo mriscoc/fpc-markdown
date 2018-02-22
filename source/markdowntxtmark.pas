@@ -45,9 +45,8 @@ implementation
 
 constructor TMarkdownTxtMark.Create;
 begin
-  //Enable Txtmark extensions:
   inherited;
-  Config.forceExtendedProfile:=true;
+  Config.Dialect:=mdTxtMark;
 end;
 
 destructor TMarkdownTxtMark.Destroy;
