@@ -107,6 +107,8 @@ Type
   end;
 {$ENDIF}
 
+  { TUtils }
+
   TUtils = class
   public
     // Skips spaces in the given String. return The new position or -1 if EOL has been reached.
@@ -164,7 +166,12 @@ Type
 
     // Removes trailing <code>`</code> or <code>~</code> and trims spaces.
     class function getMetaFromFence(fenceLine: String): String;
+
+    // Changes unsafe chars to %xx
+    class function encodeURL(url: String): String;
   end;
+
+  { THTML }
 
   THTML = class
   public
@@ -235,6 +242,7 @@ Type
 
     procedure openImage(out_: TStringBuilder); virtual;
     procedure closeImage(out_: TStringBuilder); virtual;
+
   end;
 
   TSpanEmitter = class
@@ -290,7 +298,10 @@ Type
     // Start of a XML block. */
     ltXML,
     // Fenced code block start/end */
-    ltFENCED_CODE);
+    ltFENCED_CODE,
+    // Start of Table
+    ltTABLE
+    );
 
   TLine = class
   private
@@ -372,7 +383,10 @@ Type
     // An unordered list.
     btUNORDERED_LIST,
     // A XML block.
-    btXML);
+    btXML,
+    // A table elements block.
+    btTABLE
+  );
 
   TBlock = class
   private
@@ -436,6 +450,8 @@ Type
     mtINS_PLUS, // x++x
     // ==
     mtMARK_EQ, // x==x
+    // $
+    mtMATH_DOLLAR, // $
     // `
     mtCODE_SINGLE, // `
     // ``
@@ -509,12 +525,13 @@ function StringToEnum(ATypeInfo: PTypeInfo; const AStr: String; defValue: intege
 
 implementation
 
+uses MarkdownTables, MarkdownMathCode;
+
 Function StringsContains(Const aNames: Array Of String; Const sName: String): boolean;
 var
   i: integer;
 Begin
   for i := 0 to length(aNames) - 1 do
-//    if sName <> aNames[i] then
     if sName = aNames[i] then
       exit(true);
   result := false;
@@ -844,7 +861,7 @@ begin
     btHEADLINE:
       begin
         FConfig.decorator.openHeadline(out_, root.hlDepth);
-        if (FConfig.Dialect=mdTxtMark) and (root.id <> '') then
+        if FConfig.isDialect([mdTxtMark,mdCommonMark]) and (root.id <> '') then
         begin
           out_.append(' id="');
           TUtils.appendCode(out_, root.id, 0, Length(root.id));
@@ -869,7 +886,7 @@ begin
     btLIST_ITEM:
       begin
         FConfig.decorator.openListItem(out_);
-        if (FConfig.Dialect=mdTxtMark) and (root.id <> '') then
+        if FConfig.isDialect([mdTxtMark,mdCommonMark]) and (root.id <> '') then
         begin
           out_.append(' id="');
           TUtils.appendCode(out_, root.id, 0, Length(root.id));
@@ -921,6 +938,8 @@ begin
       emitCodeLines(out_, block.lines, block.meta, false);
     btXML:
       emitRawLines(out_, block.lines);
+    btTABLE:
+      TTable.emitTableLines(out_,block.lines);
   else
     emitMarkedLines(out_, block.lines);
   end;
@@ -1067,7 +1086,7 @@ begin
       begin
         FConfig.decorator.openLink(out_);
         out_.append(' href="');
-        TUtils.appendValue(out_, link, 0, Length(link));
+        TUtils.codeEncode(out_, link, 0);
         out_.append('"');
         if (comment <> '') then
         begin
@@ -1084,7 +1103,7 @@ begin
     begin
       FConfig.decorator.openImage(out_);
       out_.append(' src="');
-      TUtils.appendValue(out_, link, 0, Length(link));
+      TUtils.codeEncode(out_, link, 0);
       out_.append('" alt="');
       TUtils.appendValue(out_, name, 0, Length(name));
       out_.append('"');
@@ -1122,7 +1141,7 @@ begin
         link := temp.ToString();
         FConfig.decorator.openLink(out_);
         out_.append(' href="');
-        TUtils.appendValue(out_, link, 0, Length(link));
+        TUtils.codeEncode(out_, link, 0);
         out_.append('">');
         TUtils.appendValue(out_, link, 0, Length(link));
         FConfig.decorator.closeLink(out_);
@@ -1451,6 +1470,19 @@ begin
             inc(position);
             out_.append(s[1 + position]);
           end;
+        mtMATH_DOLLAR:
+          begin
+            temp.Clear;
+            b := checkMathCode(temp, s, position);
+            if (b > 0) then
+            begin
+              out_.append(temp);
+              position := b;
+            end
+            else
+              out_.append('$');
+          end;
+
         // $FALL-THROUGH$
       else
         out_.append(s[1 + position]);
@@ -1548,7 +1580,7 @@ begin
       else
         exit(mtCODE_SINGLE);
     '\':
-      if CharInSet(c1, ['\', '[', ']', '(', ')', '{', '}', '#', '"', '''', '.', '>', '<', '*', '+', '-', '_', '!', '`', '~', '^']) then
+      if CharInSet(c1, ['\', '[', ']', '(', ')', '{', '}', '#', '"', '''', '.', '>', '<', '*', '+', '-', '_', '!', '`', '~', '^', '$', '|']) then
         exit(mtESCAPE)
       else
         exit(mtNONE);
@@ -1614,6 +1646,8 @@ begin
         begin
           if (c0 <> ' ') or (c2 <> ' ') then exit(mtMARK_EQ)
         end;
+      '$':
+        if (c0 <> ' ') or (c1 <> ' ') then exit(mtMATH_DOLLAR)
     end;
   end;
 end;
@@ -2222,6 +2256,8 @@ begin
         out_.append('&lt;');
       '>':
         out_.append('&gt;');
+      '+':
+        out_.append('%2b');
     else
       out_.append(c);
     end;
@@ -2241,6 +2277,32 @@ begin
       Exit(  Trim( Copy(fenceLine, i+1)));
   end;
   result := '';
+end;
+
+class function TUtils.encodeURL(url: String): String;
+var
+  x: integer;
+  sBuff: string;
+const
+  SafeMask = ['A'..'Z', '0'..'9', 'a'..'z', '*', '@', '.', '_', '-'];
+begin
+  sBuff := '';
+  for x := 1 to Length(url) do
+  begin
+    if url[x] in SafeMask then
+    begin
+      sBuff := sBuff + url[x];
+    end
+    else if url[x] = ' ' then
+    begin
+      sBuff := sBuff + '+';  //Append space
+    end
+    else
+    begin
+      sBuff := sBuff + '%' + IntToHex(Ord(url[x]),2);
+    end;
+  end;
+  Result := sBuff;
 end;
 
 { THTML }
@@ -2476,10 +2538,19 @@ begin
 
   if (next <> nil) and (not next.isEmpty) then
   begin
-    if ((next.value[1 + 0] = '-')) and ((next.countChars('-') > 0)) then
+    i:=1;
+    if config.isDialect([mdCommonMark]) then
+      while (length(next.value)>i) and (next.value[i] <> '-') and (next.value[i] <> '=') do
+        inc(i);
+    if (i<5) and (next.value[i] = '-') and (next.countChars('-') > 0) then
       exit(ltHEADLINE2);
-    if ((next.value[1 + 0] = '=')) and ((next.countChars('=') > 0)) then
+    if (i<5) and (next.value[i] = '=') and (next.countChars('=') > 0) then
       exit(ltHEADLINE1);
+  end;
+
+  if config.isDialect([mdCommonMark]) and (next <>nil) and (not next.isEmpty) then
+  begin
+    if (TTable.hasFormatChars(next)>0) and (TTable.ColCount(self)=TTable.Cols) then exit(ltTABLE);
   end;
 
   exit(ltOTHER);

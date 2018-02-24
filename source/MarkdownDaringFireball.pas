@@ -25,13 +25,12 @@ interface
 
 uses
   SysUtils, Classes, TypInfo,
-  MarkdownProcessor, MarkdownUtils;
+  MarkdownProcessor, MarkdownUtils, MarkdownTables;
 
 type
 
   TMarkdownDaringFireball = class(TMarkdownProcessor)
   private
-//    Config: TConfiguration;
     Femitter: TEmitter;
     FuseExtensions: boolean;
     function readLines(reader : TReader): TBlock;
@@ -44,7 +43,6 @@ type
     Constructor Create;
     Destructor Destroy; override;
     function process(source: String): String; override;
-//    property config: TConfiguration read Config;
   end;
 
 implementation
@@ -56,12 +54,13 @@ begin
   inherited Create;
   Config := TConfiguration.Create(true);
   Femitter := TEmitter.Create(config);
+  TTable.Emitter:=Femitter;
 end;
 
 destructor TMarkdownDaringFireball.Destroy;
 begin
-  Config.Free;
   Femitter.Free;
+  Config.Free;
   inherited;
 end;
 
@@ -320,7 +319,7 @@ begin
   if (listMode) then
   begin
     root.removeListIndent(Config);
-    if (Config.isDialect([mdTxtMark]) and (root.lines <> nil) and (root.lines.getLineType(Config) <> ltCODE)) then
+    if (Config.isDialect([mdTxtMark,mdCommonMark]) and (root.lines <> nil) and (root.lines.getLineType(Config) <> ltCODE)) then
       root.id := root.lines.stripID();
   end;
 
@@ -343,7 +342,7 @@ begin
               break;
             if (FuseExtensions and (t in [ltCODE, ltFENCED_CODE])) then
               break;
-            if (t in [ltHEADLINE, ltHEADLINE1, ltHEADLINE2, ltHR, ltBQUOTE, ltXML]) then
+            if (t in [ltHEADLINE, ltHEADLINE1, ltHEADLINE2, ltHR, ltBQUOTE, ltXML, ltTABLE]) then
               break;
             line := line.next;
           end;
@@ -426,24 +425,22 @@ begin
           line := line.next;
           while (line <> nil) do
           begin
-            if (line.getLineType(Config) = ltFENCED_CODE) then
-              break;
-            // TODO ... is this really necessary? Maybe add a special flag?
+            if (line.getLineType(Config) = ltFENCED_CODE) then break;
             line := line.next;
           end;
           if (line <> nil) then
-            line := line.next;
+            line := line.next; //skip close fenced code
           if line <> nil then
-            block := root.split(line.previous)
+            block := root.split(line.previous) // end of fenced code
           else
-            block := root.split(root.lineTail);
-          block.removeSurroundingEmptyLines();
+            block := root.split(root.lineTail); // end of the block
+          block.removeSurroundingEmptyLines();  // trim block
           block.type_ := btFENCED_CODE;
           block.meta := TUtils.getMetaFromFence(block.lines.value);
-          block.lines.setEmpty();
+          block.lines.setEmpty();  // blank first fenced code
           if (block.lineTail.getLineType(Config) = ltFENCED_CODE) then
-            block.lineTail.setEmpty();
-          block.removeSurroundingEmptyLines();
+            block.lineTail.setEmpty(); // blank last fenced code
+          block.removeSurroundingEmptyLines(); //trim block
         end;
       ltHEADLINE, ltHEADLINE1, ltHEADLINE2:
         begin
@@ -458,7 +455,7 @@ begin
               block.hlDepth := 1
             else
               block.hlDepth := 2;
-          if Config.isDialect([mdTxtMark]) then
+          if Config.isDialect([mdTxtMark,mdCommonMark]) then
             block.id := block.lines.stripID();
           block.transfromHeadline();
           root.removeLeadingEmptyLines();
@@ -494,9 +491,23 @@ begin
             block := block.next;
           end;
           list.expandListParagraphs();
-        end
-    else
-      line := line.next;
+        end;
+      ltTABLE:
+        begin
+          while (line <> nil) do
+          begin
+            if not TTable.isRow(line) then break;
+            line := line.next;
+          end;
+          if line <> nil then
+            block := root.split(line.previous)
+          else
+            block := root.split(root.lineTail);
+          block.removeSurroundingEmptyLines();
+          block.type_ := btTABLE
+        end;
+      else
+          line := line.next;
     end;
   end;
 end;

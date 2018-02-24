@@ -9,7 +9,7 @@ interface
 
 uses
   MarkdownProcessor, MarkdownDaringFireball, MarkdownTxtMark, 
-  MarkdownCommonMark;
+  MarkdownCommonMark, MarkdownTables, MarkdownMathCode;
 
 implementation
 

@@ -55,7 +55,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."/>
     <Version Major="1" Minor="1" Release="1" Build="3"/>
-    <Files Count="5">
+    <Files Count="7">
       <Item1>
         <Filename Value="source\MarkdownProcessor.pas"/>
         <UnitName Value="MarkdownProcessor"/>
@@ -77,6 +77,14 @@ limitations under the License."/>
         <Filename Value="source\MarkdownCommonMark.pas"/>
         <UnitName Value="MarkdownCommonMark"/>
       </Item5>
+      <Item6>
+        <Filename Value="source\markdowntables.pas"/>
+        <UnitName Value="MarkdownTables"/>
+      </Item6>
+      <Item7>
+        <Filename Value="source\markdownmathcode.pas"/>
+        <UnitName Value="MarkdownMathCode"/>
+      </Item7>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
