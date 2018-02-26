@@ -6,6 +6,7 @@ object MainForm: TMainForm
   Caption = 'MainForm'
   ClientHeight = 317
   ClientWidth = 473
+  DesignTimePPI = 120
   Position = poScreenCenter
   LCLVersion = '1.8.0.6'
   object Memo1: TMemo
