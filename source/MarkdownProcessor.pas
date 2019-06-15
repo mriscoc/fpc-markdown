@@ -24,7 +24,7 @@ Unit MarkdownProcessor;
 interface
 
 uses
-  SysUtils, MarkdownUtils;
+  Classes, SysUtils, MarkdownUtils;
 
 Type
 
@@ -39,6 +39,7 @@ Type
   public
     class function CreateDialect(dialect : TMarkdownDialect) : TMarkdownProcessor;
     function process(source : String) : String; virtual; abstract;
+    function processFile(source: String): String; virtual;
     property config: TConfiguration read FConfig write FConfig;
     // when Unsafe = true, then the processor can create scripts etc.
     property UnSafe : boolean read GetUnSafe write SetUnSafe;
@@ -61,6 +62,20 @@ begin
     mdTxtMark : result := TMarkdownTxtMark.Create;
   else
     raise Exception.Create('Unknown Markdown dialect');
+  end;
+end;
+
+function TMarkdownProcessor.processFile(source: String): String;
+var
+  markdown:TStringList;
+begin
+  result:='';
+  markdown := TStringList.Create;
+  try
+    markdown.LoadFromFile(source);
+    result:=process(markdown.Text);
+  finally
+    if assigned(markdown) then markdown.Free;
   end;
 end;
 
