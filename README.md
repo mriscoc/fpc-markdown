@@ -58,6 +58,8 @@ Examples
 The demo folder contains two demonstrative [Lazarus](http://www.lazarus-ide.org/) programs,
 the most advanced, `MarkdownHTML`, needs the [HTMLViewer](https://github.com/BerndGabriel/HtmlViewer) control.
 
+There is also a basic editor at (https://github.com/mriscoc/mdEditor) with syntax highlight for pascal, c, html and vhdl
+
 License
 -------
 Copyright (C) Miguel A. Risco-Castillo
