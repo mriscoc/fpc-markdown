@@ -51,6 +51,8 @@ Do not forget to dispose of the object after the use:
 
        md.free
 
+Large rework was made for adding support for tables, math formulas, etc.
+
 Examples
 --------
 The demo folder contains two demonstrative [Lazarus](http://www.lazarus-ide.org/) programs,
@@ -62,8 +64,6 @@ Copyright (C) Miguel A. Risco-Castillo
 
 FPC-markdown implementation is a fork of Grahame Grieve pascal port
 [Delphi-markdown](https://github.com/grahamegrieve/delphi-markdown)
-
-Large rework was made for adding support for tables, math formulas, etc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
