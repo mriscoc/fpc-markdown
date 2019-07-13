@@ -15,10 +15,10 @@ At present the following dialects of markdown are supported:
 * Enhanced TxtMark dialect
  (translated from <https://github.com/rjeschke/txtmark>)
 
-* Initial support for CommonMark dialect
+* Almost complete support for CommonMark dialect
  (translated from <http://commonmark.org/>)
 
-Wishlist: PEGDown (Github dialect), CommonMark, etc.
+Wishlist: PEGDown (Github dialect).
 
 All you need to use the library is FPC version 3.0.4 or newer.
 
@@ -62,6 +62,8 @@ Copyright (C) Miguel A. Risco-Castillo
 
 FPC-markdown implementation is a fork of Grahame Grieve pascal port
 [Delphi-markdown](https://github.com/grahamegrieve/delphi-markdown)
+
+Large rework was made for adding support for tables, math formulas, etc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
