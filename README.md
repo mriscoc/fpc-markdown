@@ -60,6 +60,8 @@ the most advanced, `MarkdownHTML`, needs the [HTMLViewer](https://github.com/Ber
 
 There is also a basic editor at (https://github.com/mriscoc/mdEditor) with syntax highlight for pascal, c, html and vhdl
 
+![mdEditor](mdeditor.png)
+
 License
 -------
 Copyright (C) Miguel A. Risco-Castillo
