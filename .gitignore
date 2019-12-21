@@ -1,0 +1,9 @@
+backup
+lib
+resources
+images
+*.bak
+*.exe
+*.lps
+*.res
+*.ico
