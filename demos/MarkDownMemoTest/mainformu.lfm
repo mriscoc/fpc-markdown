@@ -1,0 +1,87 @@
+object MainForm: TMainForm
+  Left = 226
+  Height = 528
+  Top = 258
+  Width = 629
+  Caption = 'MainForm'
+  ClientHeight = 528
+  ClientWidth = 629
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  Position = poScreenCenter
+  LCLVersion = '2.0.7.0'
+  object PairSplitter1: TPairSplitter
+    Left = 0
+    Height = 528
+    Top = 0
+    Width = 629
+    Align = alClient
+    Position = 300
+    object PairSplitterSide1: TPairSplitterSide
+      Cursor = crArrow
+      Left = 0
+      Height = 528
+      Top = 0
+      Width = 300
+      ClientWidth = 300
+      ClientHeight = 528
+      object Memo1: TMemo
+        Left = 0
+        Height = 508
+        Top = 20
+        Width = 300
+        Align = alClient
+        Anchors = [akTop, akBottom]
+        OnChange = Memo1Change
+        TabOrder = 0
+      end
+      object Label1: TLabel
+        Left = 0
+        Height = 20
+        Top = 0
+        Width = 300
+        Align = alTop
+        Alignment = taCenter
+        AutoSize = False
+        Caption = 'Markdown'
+        Color = clBtnFace
+        FocusControl = Memo1
+        Layout = tlCenter
+        ParentColor = False
+        Transparent = False
+      end
+    end
+    object PairSplitterSide2: TPairSplitterSide
+      Cursor = crArrow
+      Left = 305
+      Height = 528
+      Top = 0
+      Width = 324
+      ClientWidth = 324
+      ClientHeight = 528
+      object Memo2: TMemo
+        Left = 0
+        Height = 508
+        Top = 20
+        Width = 324
+        Align = alClient
+        TabOrder = 0
+      end
+      object Label2: TLabel
+        Left = 0
+        Height = 20
+        Top = 0
+        Width = 324
+        Align = alTop
+        Alignment = taCenter
+        AutoSize = False
+        Caption = 'Html'
+        Color = clBtnFace
+        FocusControl = Memo2
+        Layout = tlCenter
+        ParentColor = False
+        Transparent = False
+      end
+    end
+  end
+end
