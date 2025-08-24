@@ -108,7 +108,7 @@ begin
     orig:=orig.next;
   end;
   t:='<table>'#10;
-  t:=t+outs+'</table>'#10;
+  t:=t+outs+'</table>'#10+'<br/>'#10;
   tsl.free;
   ColAlign.free;
   ProcTable:=t;
@@ -124,29 +124,52 @@ end;
 class function TTable.hasFormatChars(L: Tline): integer;
 var
   i,j:integer;
+  sepCount: integer;
+  hasDash: boolean;
 begin
-  result:=0;Cols:=0;
+  result:=0; Cols:=0;
   if not Assigned(L) or L.isEmpty then exit(0);
   i:=L.leading+1;
   j:=Length(L.value)-L.trailing;
-  if i>4 then exit(0); // more of 4 spaces of identation
+  if i>4 then exit(0); // more than 4 spaces of indentation
+
+  // Skip edge pipes for internal separator counting
   if L.value[i]='|' then inc(i);
   if L.value[j]='|' then dec(j);
+
+  sepCount := 0;
+  hasDash := false;
+
   while (i<=j) do
   begin
     if not(L.value[i] in [' ','|','-',':']) then exit(0);
-    if L.value[i]='|' then inc(result);
+    if L.value[i]='|' then inc(sepCount);
+    if L.value[i]='-' then hasDash := true;
     inc(i);
   end;
-  Cols:=result;
+
+  // Must have at least one dash to be a format row
+  if not hasDash then exit(0);
+
+  // Store internal separator count for row checks
+  Cols := sepCount;
+
+  // Return positive value even for single-column (0 internal separators)
+  if sepCount = 0 then
+    result := 1
+  else
+    result := sepCount;
 end;
 
 class function TTable.isRow(L: Tline): boolean;
 var
   c:integer;
+  s:string;
 begin
-  c:=ColCount(L);
-  exit((c>0) and (c<=Cols))
+  c := ColCount(L);
+  s := Trim(L.value);
+  // Must contain a pipe somewhere and match the format's separator count
+  exit((Pos('|', s) > 0) and (c = Cols));
 end;
 
 class function TTable.ColCount(L: Tline): integer;
