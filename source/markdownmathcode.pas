@@ -11,6 +11,10 @@ function checkMathCode(out_: TStringBuilder; s: String; start: integer): integer
 
 implementation
 
+const
+  equationapi = '<img src="https://latex.codecogs.com/png.image?\dpi{110}';
+  //equationapi = '<img src="https://chart.googleapis.com/chart?cht=tx&chl='; // deprecated
+
 function checkMathCode(out_: TStringBuilder; s: String; start: integer
   ): integer;
 var
@@ -27,7 +31,7 @@ begin
        (s[position] <> '\') then
     begin
       code:= temp.ToString();
-      out_.append('<img src="https://chart.googleapis.com/chart?cht=tx&chl=');
+      out_.append(equationapi);
       TUtils.codeEncode(out_, code, 0);
       out_.append('" alt="');
       TUtils.appendValue(out_, code, 0, Length(code));
