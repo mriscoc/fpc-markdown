@@ -2258,6 +2258,8 @@ begin
         out_.append('&gt;');
       '+':
         out_.append('%2b');
+      ' ':
+        out_.append('%20');
     else
       out_.append(c);
     end;

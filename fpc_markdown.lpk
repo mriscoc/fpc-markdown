@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="fpc_markdown"/>
     <Type Value="RunTimeOnly"/>
@@ -54,7 +54,7 @@ distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."/>
-    <Version Major="1" Minor="2" Build="7"/>
+    <Version Major="1" Minor="3" Build="9"/>
     <Files Count="7">
       <Item1>
         <Filename Value="source\MarkdownProcessor.pas"/>
@@ -86,6 +86,7 @@ limitations under the License."/>
         <UnitName Value="MarkdownMathCode"/>
       </Item7>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="LCL"/>
@@ -100,7 +101,6 @@ limitations under the License."/>
     </UsageOptions>
     <PublishOptions>
       <Version Value="2"/>
-      <IgnoreBinaries Value="False"/>
     </PublishOptions>
     <CustomOptions Items="ExternHelp" Version="2">
       <_ExternHelp Items="Count"/>

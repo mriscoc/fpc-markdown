@@ -15,8 +15,7 @@ const
   equationapi = '<img src="https://latex.codecogs.com/png.image?\dpi{110}';
   //equationapi = '<img src="https://chart.googleapis.com/chart?cht=tx&chl='; // deprecated
 
-function checkMathCode(out_: TStringBuilder; s: String; start: integer
-  ): integer;
+ function checkMathCode(out_: TStringBuilder; s: String; start: integer): integer;
 var
   temp: TStringBuilder;
   position: integer;
@@ -24,11 +23,15 @@ var
 begin
   temp := TStringBuilder.Create();
   try
-    // Check for mathcode {a^2+b^2=c^2} and generate link
+    // Check for enclosed mathcode ${a^2+b^2=c^2}$ and generate link
     temp.Clear;
-    position := TUtils.readUntil(temp, s, start + 1, [' ', '$', #10]);
-    if (position <> -1) and (s[1 + position] = '$') and
-       (s[position] <> '\') then
+    position := TUtils.readRawUntil(temp, s, start + 1, ['$', #10]);
+    if     (position <> -1)         // end was found
+       and (s[1 + position] = '$')  // closing $ was found
+       and (s[position] <> '\')     // is not a \$
+       and (s[position] <> ' ')     // is not an space before $
+       and not CharInSet(s[1 + position], ['0'..'9'])  // no digit after the closing $
+    then
     begin
       code:= temp.ToString();
       out_.append(equationapi);
