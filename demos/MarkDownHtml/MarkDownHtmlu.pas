@@ -173,6 +173,7 @@ begin
   SE_MarkDown.OnMouseWheel := @AnyMouseWheel;
   SE_HTML.OnMouseWheel     := @AnyMouseWheel;
   HtmlViewer.OnMouseWheel  := @AnyMouseWheel;
+  MainForm.OnMouseWheel  := @AnyMouseWheel;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
