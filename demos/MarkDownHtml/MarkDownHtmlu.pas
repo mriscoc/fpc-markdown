@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, LazFileUtils, SynEdit, SynHighlighterHTML, Forms, Controls,
   Graphics, Dialogs, StdCtrls, ExtCtrls, Clipbrd, MarkdownProcessor, MarkdownUtils,
-  LCLIntf, ComCtrls, Buttons, StrUtils, HtmlView, HtmlGlobals, HTMLUn2;
+  LCLIntf, ComCtrls, Buttons, StrUtils, HtmlView, HtmlGlobals, HTMLUn2, Types, Math;
 
 type
 
@@ -46,9 +46,15 @@ type
     procedure HtmlViewerImageRequest(Sender: TObject; const SRC: ThtString;
       var Stream: TStream);
     procedure SE_HTMLChange(Sender: TObject);
+
+    procedure AnyMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+
   private
     procedure OpenInBrowser;
     procedure SetPreview;
+
+    procedure ApplyZoomDelta(Delta: Integer);
 
   public
 
@@ -161,6 +167,12 @@ begin
   HtmlViewer.OnImageRequest:=@HtmlViewerImageRequest;
   MStream := TMemoryStream.Create;
   B_ConvertClick(Self);
+
+
+  // ctrl + wheel zoom everywhere
+  SE_MarkDown.OnMouseWheel := @AnyMouseWheel;
+  SE_HTML.OnMouseWheel     := @AnyMouseWheel;
+  HtmlViewer.OnMouseWheel  := @AnyMouseWheel;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -250,6 +262,40 @@ begin
     ShowMessage('Can not create and open the temp file');
   end;
 end;
+
+// new methods for zooming
+
+procedure TMainForm.ApplyZoomDelta(Delta: Integer);
+var
+  NewSize: Integer;
+begin
+  NewSize := SE_MarkDown.Font.Size + Delta;
+  NewSize := Max(8, Min(NewSize, 40));
+
+  // Left panes (SynEdit)
+  SE_MarkDown.Font.Size := NewSize;
+  SE_HTML.Font.Size := NewSize;
+
+  // Right pane (THtmlViewer)
+  HtmlViewer.DefFontSize := NewSize;
+
+  // force re-render
+  HtmlViewer.LoadFromString(CSSDecoration + SE_HTML.Text);
+end;
+
+procedure TMainForm.AnyMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  if not (ssCtrl in Shift) then Exit;
+
+  Handled := True; // block default scrolling when Ctrl is pressed
+
+  if WheelDelta > 0 then
+    ApplyZoomDelta(+2)   // same step as your baseeditform
+  else if WheelDelta < 0 then
+    ApplyZoomDelta(-2);
+end;
+
 
 end.
 
