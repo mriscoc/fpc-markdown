@@ -1,15 +1,15 @@
 object MainForm: TMainForm
-  Left = 226
+  Left = 1627
   Height = 528
-  Top = 258
+  Top = 243
   Width = 629
   Caption = 'MainForm'
   ClientHeight = 528
   ClientWidth = 629
+  Position = poScreenCenter
+  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  Position = poScreenCenter
-  LCLVersion = '2.0.7.0'
   object PairSplitter1: TPairSplitter
     Left = 0
     Height = 528
@@ -32,8 +32,8 @@ object MainForm: TMainForm
         Width = 300
         Align = alClient
         Anchors = [akTop, akBottom]
-        OnChange = Memo1Change
         TabOrder = 0
+        OnChange = Memo1Change
       end
       object Label1: TLabel
         Left = 0
