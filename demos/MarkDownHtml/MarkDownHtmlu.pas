@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, LazFileUtils, SynEdit, SynHighlighterHTML, Forms, Controls,
   Graphics, Dialogs, StdCtrls, ExtCtrls, Clipbrd, MarkdownProcessor, MarkdownUtils,
-  LCLIntf, ComCtrls, Buttons, StrUtils, HtmlView, HtmlGlobals, HTMLUn2;
+  LCLIntf, ComCtrls, Buttons, StrUtils, HtmlView, HtmlGlobals, HTMLUn2, Types, Math;
 
 type
 
@@ -46,9 +46,12 @@ type
     procedure HtmlViewerImageRequest(Sender: TObject; const SRC: ThtString;
       var Stream: TStream);
     procedure SE_HTMLChange(Sender: TObject);
+    procedure AnyMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private
     procedure OpenInBrowser;
     procedure SetPreview;
+    procedure ApplyZoomDelta(Delta: Integer);
 
   public
 
@@ -161,6 +164,11 @@ begin
   HtmlViewer.OnImageRequest:=@HtmlViewerImageRequest;
   MStream := TMemoryStream.Create;
   B_ConvertClick(Self);
+
+  SE_MarkDown.OnMouseWheel := @AnyMouseWheel;
+  SE_HTML.OnMouseWheel     := @AnyMouseWheel;
+  HtmlViewer.OnMouseWheel  := @AnyMouseWheel;
+  Self.OnMouseWheel        := @AnyMouseWheel;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -249,6 +257,38 @@ begin
   except
     ShowMessage('Can not create and open the temp file');
   end;
+end;
+
+procedure TMainForm.ApplyZoomDelta(Delta: Integer);
+var
+  NewSize: Integer;
+begin
+  NewSize := SE_MarkDown.Font.Size + Delta;
+  NewSize := Max(8, Min(NewSize, 40));
+  if NewSize = SE_MarkDown.Font.Size then Exit;
+
+  // Left panes (SynEdit)
+  SE_MarkDown.Font.Size := NewSize;
+  SE_HTML.Font.Size := NewSize;
+
+  // Right pane (THtmlViewer)
+  HtmlViewer.DefFontSize := NewSize;
+
+  // Re-render the preview with the new font size.
+  HtmlViewer.LoadFromString(CSSDecoration + SE_HTML.Text);
+end;
+
+procedure TMainForm.AnyMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  if not (ssCtrl in Shift) then Exit;
+
+  Handled := True;
+
+  if WheelDelta > 0 then
+    ApplyZoomDelta(+2)
+  else if WheelDelta < 0 then
+    ApplyZoomDelta(-2);
 end;
 
 end.
