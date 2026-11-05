@@ -47,11 +47,11 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="$Env(PRJOUT)/$NameOnly($(ProjFile))/MarkDownMemoTest"/>
+      <Filename Value="MarkDownMemoTest"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <UnitOutputDirectory Value="$Env(Temp)/lazarus/lib/$(TargetCPU)-$(TargetOS)"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>
